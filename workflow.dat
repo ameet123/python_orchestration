@@ -1,0 +1,3 @@
+project name,stage,command,parallel
+myProject, 1,ls,false
+team2, 2,dir c:\,false
