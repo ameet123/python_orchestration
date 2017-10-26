@@ -19,6 +19,7 @@ DATA = None
 WORKFLOW_ERROR_CODE = 5
 STAGES = None
 OUTPUT_MAX_LEN = 1024
+STATUS_UNDERLINE_LEN = 120
 
 
 # To orchestrate multiple stages in defined sequence.
@@ -53,6 +54,17 @@ class Orchestrate:
         elapsed = time.time() - START
         LOGGER.info("<-- Completed in:%.2f sec.", elapsed)
 
+    def stageLaunch(self, project, stage):
+        status = "\t\t------ [%s] %s:%s --------"
+        status = status + "\n" + STATUS_UNDERLINE_LEN * "="
+        LOGGER.info(status, "START", project, stage)
+        return time.time()
+
+    def stageEnd(self, project, stage, start):
+        status = "\t\t------ [%s] %s:%s (%.2f sec)--------"
+        status = status + "\n" + STATUS_UNDERLINE_LEN * "="
+        LOGGER.info(status, "END", project, stage, time.time() - start)
+
     def process(self):
         procs = []
         for index, row in DATA.iterrows():
@@ -62,8 +74,9 @@ class Orchestrate:
             cmdArray = self.cleanseCommand(cmd)
             LOGGER.info("Proj[%s]: stage:[%s] Cmdarray:%s", project, stage, cmdArray)
             try:
+                start = self.stageLaunch(project, stage)
                 proc = subprocess.Popen(cmdArray, stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
-                ps = ProcessStruct(project, stage, proc, cmd)
+                ps = ProcessStruct(project, stage, proc, cmd, start)
                 procs.append(ps)
 
             except OSError as o:
@@ -81,6 +94,7 @@ class Orchestrate:
             output = output.decode(UTF)
             LOGGER.debug("\t%s {stage:%s, return:%s, output:\"%s\", error:\"%s\"}",
                          p.name, p.stage, proc.returncode, output[:OUTPUT_MAX_LEN], error)
+            self.stageEnd(p.name, p.stage, p.start)
 
 
 class ProcessStruct:
@@ -88,8 +102,10 @@ class ProcessStruct:
     stage = None
     proc = None
     cmd = None
+    start = None
 
-    def __init__(self, name, stage, proc, cmd):
+    def __init__(self, name, stage, proc, cmd, start):
+        self.start = start
         self.name = name
         self.stage = stage
         self.proc = proc
