@@ -9,7 +9,7 @@ import pandas as pd
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 LOGGER = logging.getLogger('AnthemOrchestrator')
-CONFIG_FILE = 'C:/Users/ameet.chaubal/Documents/source/anthemOrchestrator/workflow.dat'
+
 COMMAND_COL = 'command'
 PROJECT_COL = 'project name'
 STAGE_COL = 'stage'
@@ -103,7 +103,7 @@ if __name__ == '__main__':
 
     fileName = sys.argv[1]
     LOGGER.info("WorkFlow:%s", fileName)
-    orch = Orchestrate(CONFIG_FILE)
+    orch = Orchestrate(fileName)
     orch.init()
     orch.process()
     orch.finish()
