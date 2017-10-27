@@ -87,6 +87,7 @@ class Orchestrate:
                 else:
                     LOGGER.debug("Process:%s stage:%s is sequential, waiting for completion", project, stage)
                     self.processStatus(ps)
+                    self.stageEnd(ps.name, ps.stage, ps.start)
 
             except OSError as o:
                 LOGGER.error("Err: oserror:%s", o.strerror)
@@ -98,12 +99,13 @@ class Orchestrate:
         LOGGER.debug("Launch completed, will wait on completion: %d stages", len(procs))
         for p in procs:
             LOGGER.info("waiting on proc:%s", p.name)
-            proc = p.proc
-            output, error = proc.communicate()
-            error = error.decode(UTF)
-            output = output.decode(UTF)
-            LOGGER.info("\t%s {stage:%s, return:%s, output:\"%s\", error:\"%s\"}",
-                        p.name, p.stage, proc.returncode, output[:OUTPUT_MAX_LEN], error)
+            self.processStatus(p)
+            # proc = p.proc
+            # output, error = proc.communicate()
+            # error = error.decode(UTF)
+            # output = output.decode(UTF)
+            # LOGGER.info("\t%s {stage:%s, return:%s, output:\"%s\", error:\"%s\"}",
+            #             p.name, p.stage, proc.returncode, output[:OUTPUT_MAX_LEN], error)
             self.stageEnd(p.name, p.stage, p.start)
 
     def processStatus(self, p):
