@@ -98,7 +98,6 @@ class Orchestrate:
 
         LOGGER.debug("Launch completed, will wait on completion: %d stages", len(procs))
         for p in procs:
-            LOGGER.info("waiting on proc:%s", p.name)
             self.processStatus(p)
 
     def processStatus(self, p):
