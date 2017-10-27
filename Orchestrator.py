@@ -100,13 +100,6 @@ class Orchestrate:
         for p in procs:
             LOGGER.info("waiting on proc:%s", p.name)
             self.processStatus(p)
-            # proc = p.proc
-            # output, error = proc.communicate()
-            # error = error.decode(UTF)
-            # output = output.decode(UTF)
-            # LOGGER.info("\t%s {stage:%s, return:%s, output:\"%s\", error:\"%s\"}",
-            #             p.name, p.stage, proc.returncode, output[:OUTPUT_MAX_LEN], error)
-            self.stageEnd(p.name, p.stage, p.start)
 
     def processStatus(self, p):
         LOGGER.info("waiting on proc:%s", p.name)
