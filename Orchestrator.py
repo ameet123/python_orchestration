@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import logging
 import os
 import subprocess
@@ -13,7 +15,7 @@ LOGGER = logging.getLogger('AnthemOrchestrator')
 COMMAND_COL = 'command'
 PROJECT_COL = 'project name'
 STAGE_COL = 'stage'
-PARALLEL_COL = 'parallel'
+PARALLEL_COL = 'isParallel'
 UTF = "utf-8"
 DATA = None
 WORKFLOW_ERROR_CODE = 5
@@ -72,13 +74,20 @@ class Orchestrate:
             project = row[PROJECT_COL]
             stage = row[STAGE_COL]
             cmdArray = self.cleanseCommand(cmd)
+            isParallel = row[PARALLEL_COL]
             LOGGER.info("Proj[%s]: stage:[%s] Cmdarray:%s", project, stage, cmdArray)
             try:
                 start = self.stageLaunch(project, stage)
-                proc = subprocess.Popen(cmdArray, stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+                proc = subprocess.Popen(cmdArray, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
                 ps = ProcessStruct(project, stage, proc, cmd, start)
-                procs.append(ps)
-
+		if (isParallel="yes"):
+		    LOGGER.debug("Process:%s stage:%s is parallel, moving to next", project, stage)
+                    procs.append(ps)
+		    continue
+		else:
+		    LOGGER.debug("Process:%s stage:%s is sequential, waiting for completion", project, stage)
+		    self.processStatus(ps)
+		    
             except OSError as o:
                 LOGGER.error("Err: oserror:%s", o.strerror)
             except CalledProcessError as e:
@@ -88,14 +97,24 @@ class Orchestrate:
 
         LOGGER.debug("Launch completed, will wait on completion: %d stages", len(procs))
         for p in procs:
+	    LOGGER.info("waiting on proc:%s",p.name)
             proc = p.proc
             output, error = proc.communicate()
             error = error.decode(UTF)
             output = output.decode(UTF)
-            LOGGER.debug("\t%s {stage:%s, return:%s, output:\"%s\", error:\"%s\"}",
+            LOGGER.info("\t%s {stage:%s, return:%s, output:\"%s\", error:\"%s\"}",
                          p.name, p.stage, proc.returncode, output[:OUTPUT_MAX_LEN], error)
             self.stageEnd(p.name, p.stage, p.start)
 
+    def processStatus(self,p):
+	LOGGER.info("waiting on proc:%s",p.name)
+        proc = p.proc
+        output, error = proc.communicate()
+        error = error.decode(UTF)
+        output = output.decode(UTF)
+        LOGGER.info("\t%s {stage:%s, return:%s, output:\"%s\", error:\"%s\"}",
+                     p.name, p.stage, proc.returncode, output[:OUTPUT_MAX_LEN], error)
+        self.stageEnd(p.name, p.stage, p.start)
 
 class ProcessStruct:
     name = None
@@ -104,7 +123,7 @@ class ProcessStruct:
     cmd = None
     start = None
 
-    def __init__(self, name, stage, proc, cmd, start):
+
         self.start = start
         self.name = name
         self.stage = stage
