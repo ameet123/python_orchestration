@@ -29,7 +29,6 @@ STATUS_UNDERLINE_LEN = 120
 # this file contains 3 columns: project name,stage,command
 class Orchestrate:
     workFlow = None
-    START = None
 
     def __init__(self, workflow):
         self.workFlow = workflow
