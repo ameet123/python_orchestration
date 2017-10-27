@@ -80,14 +80,14 @@ class Orchestrate:
                 start = self.stageLaunch(project, stage)
                 proc = subprocess.Popen(cmdArray, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
                 ps = ProcessStruct(project, stage, proc, cmd, start)
-		if (isParallel="yes"):
-		    LOGGER.debug("Process:%s stage:%s is parallel, moving to next", project, stage)
+                if isParallel == "yes":
+                    LOGGER.debug("Process:%s stage:%s is parallel, moving to next", project, stage)
                     procs.append(ps)
-		    continue
-		else:
-		    LOGGER.debug("Process:%s stage:%s is sequential, waiting for completion", project, stage)
-		    self.processStatus(ps)
-		    
+                    continue
+                else:
+                    LOGGER.debug("Process:%s stage:%s is sequential, waiting for completion", project, stage)
+                    self.processStatus(ps)
+
             except OSError as o:
                 LOGGER.error("Err: oserror:%s", o.strerror)
             except CalledProcessError as e:
@@ -97,24 +97,25 @@ class Orchestrate:
 
         LOGGER.debug("Launch completed, will wait on completion: %d stages", len(procs))
         for p in procs:
-	    LOGGER.info("waiting on proc:%s",p.name)
+            LOGGER.info("waiting on proc:%s", p.name)
             proc = p.proc
             output, error = proc.communicate()
             error = error.decode(UTF)
             output = output.decode(UTF)
             LOGGER.info("\t%s {stage:%s, return:%s, output:\"%s\", error:\"%s\"}",
-                         p.name, p.stage, proc.returncode, output[:OUTPUT_MAX_LEN], error)
+                        p.name, p.stage, proc.returncode, output[:OUTPUT_MAX_LEN], error)
             self.stageEnd(p.name, p.stage, p.start)
 
-    def processStatus(self,p):
-	LOGGER.info("waiting on proc:%s",p.name)
+    def processStatus(self, p):
+        LOGGER.info("waiting on proc:%s", p.name)
         proc = p.proc
         output, error = proc.communicate()
         error = error.decode(UTF)
         output = output.decode(UTF)
         LOGGER.info("\t%s {stage:%s, return:%s, output:\"%s\", error:\"%s\"}",
-                     p.name, p.stage, proc.returncode, output[:OUTPUT_MAX_LEN], error)
+                    p.name, p.stage, proc.returncode, output[:OUTPUT_MAX_LEN], error)
         self.stageEnd(p.name, p.stage, p.start)
+
 
 class ProcessStruct:
     name = None
@@ -123,7 +124,7 @@ class ProcessStruct:
     cmd = None
     start = None
 
-
+    def __init__(self, name, stage, proc, cmd, start):
         self.start = start
         self.name = name
         self.stage = stage
