@@ -16,6 +16,7 @@ COMMAND_COL = 'command'
 PROJECT_COL = 'project name'
 STAGE_COL = 'stage'
 PARALLEL_COL = 'isParallel'
+PREV_OUTPUT_COL = 'isPreviousOutputDesired'
 UTF = "utf-8"
 DATA = None
 WORKFLOW_ERROR_CODE = 5
@@ -68,15 +69,20 @@ class Orchestrate:
 
     def process(self):
         procs = []
+        # to capture the output for next step
+        prevOutput = None
         for index, row in DATA.iterrows():
             cmd = row[COMMAND_COL]
             project = row[PROJECT_COL]
             stage = row[STAGE_COL]
             cmdArray = self.cleanseCommand(cmd)
             isParallel = row[PARALLEL_COL]
+            isPrevOutputDesired = row[PREV_OUTPUT_COL]
             LOGGER.info("Proj[%s]: stage:[%s] Cmdarray:%s", project, stage, cmdArray)
             try:
                 start = self.stageLaunch(project, stage)
+                if (isPrevOutputDesired=="yes" and prevOutput is not None):
+                    LOGGER.debug("\t>>Adding prevOutput to command line")
                 proc = subprocess.Popen(cmdArray, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
                 ps = ProcessStruct(project, stage, proc, cmd, start)
                 if isParallel == "yes":
@@ -85,8 +91,8 @@ class Orchestrate:
                     continue
                 else:
                     LOGGER.debug("Process:%s stage:%s is sequential, waiting for completion", project, stage)
-                    self.processStatus(ps)
-                    self.stageEnd(ps.name, ps.stage, ps.start)
+                    prevOutput = self.processStatus(ps)
+
 
             except OSError as o:
                 LOGGER.error("Err: oserror:%s", o.strerror)
@@ -108,6 +114,7 @@ class Orchestrate:
         LOGGER.info("\t%s {stage:%s, return:%s, output:\"%s\", error:\"%s\"}",
                     p.name, p.stage, proc.returncode, output[:OUTPUT_MAX_LEN], error)
         self.stageEnd(p.name, p.stage, p.start)
+        return output
 
 
 class ProcessStruct:
