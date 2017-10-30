@@ -83,6 +83,7 @@ class Orchestrate:
                 start = self.stageLaunch(project, stage)
                 if (isPrevOutputDesired=="yes" and prevOutput is not None):
                     LOGGER.debug("\t>>Adding prevOutput to command line")
+                    cmdArray.append(prevOutput)
                 proc = subprocess.Popen(cmdArray, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
                 ps = ProcessStruct(project, stage, proc, cmd, start)
                 if isParallel == "yes":
