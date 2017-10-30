@@ -20,3 +20,16 @@ myProject,1,/bin/sh /home/af55267/script/orchestrate/python_orchestration/sleepe
 team-2,2,ls,yes
 ```
 
+#### Linkage between processes
+
+Two stages can be linked to each other in a sequential manner.
+If a stage desires output from a previous stage, the orchestrator can do that.
+The mechanism and steps are as follows,
++ specify options in workflow file as follows,
+
+    `project name,stage,command,isParallel,isPreviousOutputDesired
+     myProject,1,/bin/sh /home/af55267/script/orchestrate/python_orchestration/sleeper.sh,yes,no
+     team-2,2,ls,yes,yes`
++ Ensure that the previous step returns in its output the exact argument desired 
+by the subsequent stage
++ specify the `isPreviousOutputDesired` field as `yes`
